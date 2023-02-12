@@ -1,0 +1,42 @@
+---
+- name: "Setup Grafana key"
+  ansible.builtin.apt_key:
+    id: 0E22EB88E39E12277A7760AE9E439B102CF3C0C6
+    url: https://apt.grafana.com/gpg.key
+    keyring: /etc/apt/trusted.gpg.d/grafana.gpg
+    state: present
+  when: use_grafana_repository
+- name: "Setup Grafana repository"
+  ansible.builtin.apt_repository:
+    repo: 'deb https://apt.grafana.com stable main'
+    update_cache: true
+    state: present
+    filename: 'grafana'
+  when: use_grafana_repository
+- name: "Setup package"
+  ansible.builtin.apt:
+    name: 'grafana-agent'
+    state: present
+- name: "Setup grafana-agent group"
+  ansible.builtin.group:
+    name: grafana-agent
+    state: present
+- name: "Setup grafana-agent user"
+  ansible.builtin.user:
+    name: grafana-agent
+    group: grafana-agent
+    home: '/var/lib/grafana-agent'
+    create_home: true
+    state: present
+- name: "Configure Grafana agent"
+  ansible.builtin.template:
+    src: grafana-agent.yaml.j2
+    dest: /etc/grafana-agent.yaml
+    owner: root
+    group: grafana-agent
+    mode: 0640
+- name: "Configure Grafana agent service"
+  ansible.builtin.service:
+    name: grafana-agent
+    enabled: true
+    state: started

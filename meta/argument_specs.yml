@@ -1,0 +1,84 @@
+---
+argument_specs:
+  main:
+    options:
+      use_grafana_repository:
+        type: bool
+        required: false
+        default: false
+      snmp:
+        type: dict
+        required: false
+        options:
+          targets:
+            type: list
+            required: false
+            elements: dict
+            options:
+              name:
+                type: str
+                required: true
+          communities:
+            type: list
+            required: false
+            elements: dict
+            options:
+              name:
+                type: str
+                required: true
+              version:
+                type: int
+                required: true
+              community_name:
+                type: str
+                required: false
+                default: "{{ name }}"
+              username:
+                type: str
+                required: false
+              password:
+                type: str
+                required: false
+              security_level:
+                type: str
+                required: false
+                default: noAuthNoPriv
+              auth_protocol:
+                type: str
+                required: false
+                default: SHA256
+              priv_protocol:
+                type: str
+                required: false
+                default: AES256
+              priv_password:
+                type: str
+                required: false
+      logs:
+        type: dict
+        required: false
+        options:
+          positions_file:
+            type: str
+            required: false
+            default: /tmp/positions.yaml
+          scrape_configs:
+            type: raw
+            required: true
+      metrics:
+        type: dict
+        required: false
+        options:
+          wal_directory:
+            type: str
+            required: false
+            default: /tmp/grafana-agent-wal
+          scrape_interval:
+            type: int
+            required: false
+            default: 60
+          configs:
+            type: raw
+            required: true
+            default:
+              - name: integrations

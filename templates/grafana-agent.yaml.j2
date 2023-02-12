@@ -1,0 +1,55 @@
+integrations:
+  node_exporter:
+    enabled: true
+    relabel_configs:
+      - replacement: {{ friendly_hostname }}
+        target_label: instance
+  {% if snmp is defined %}
+  snmp:
+    enabled: true
+    walk_param:
+      {% for community in snmp.communities %}
+      {{ community.name }}:
+        version: {{ community.version }}
+        auth:
+          community: {{ community.community_name }}
+          username: {{ community.username }}
+          security_level: {{ community.security_level }}
+          password: {{ community.password }}
+          auth_protocol: {{ community.auth_protocol }}
+          priv_protocol: {{ community.priv_protocol }}
+          priv_password: {{ community.priv_password }}
+      {% endfor %}
+  {% endif %}
+  prometheus_remote_write:
+    - basic_auth:
+        password: {{ prometheus_password }}
+        username: {{ prometheus_username }}
+      url: {{ prometheus_url }}
+{% if logs is defined %}
+logs:
+  configs:
+    - clients:
+        - basic_auth:
+            password: {{ loki_password }}
+            username: {{ loki_username }}
+          url: {{ loki_url }}
+      name: integrations
+      positions:
+        filename: {{ logs.positions_file }}
+      scrape_configs:
+        {{ logs.scrape_configs | to_nice_yaml(indent=2) | trim | indent(8) }}
+      target_config:
+        sync_period: 10s
+{% endif %}
+metrics:
+  configs:
+    {{ metrics.configs | to_nice_yaml(indent=2) | trim | indent(4) }}
+  global:
+    scrape_interval: {{ metrics.scrape_interval }}s
+    remote_write:
+      - basic_auth:
+          password: {{ prometheus_password }}
+          username: {{ prometheus_username }}
+        url: {{ prometheus_url }}
+  wal_directory: {{ metrics.wal_directory }}
