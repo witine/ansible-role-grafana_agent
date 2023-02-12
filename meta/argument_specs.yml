@@ -5,7 +5,36 @@ argument_specs:
       use_grafana_repository:
         type: bool
         required: false
-        default: false
+        default: true
+      remote_write:
+        type: list
+        required: false
+        elements: dict
+        options:
+          url:
+            type: str
+            required: true
+          basic_auth:
+            type: dict
+            required: false
+            options:
+              username:
+                type: str
+                required: true
+              password:
+                type: str
+                required: true
+          authorization:
+            type: dict
+            required: false
+            options:
+              type:
+                type: str
+                required: false
+                default: 'Bearer'
+              credentials:
+                type: str
+                required: true
       snmp:
         type: dict
         required: false
@@ -16,6 +45,15 @@ argument_specs:
             elements: dict
             options:
               name:
+                type: str
+                required: true
+              address:
+                type: str
+                required: true
+              module:
+                type: str
+                required: true
+              community:
                 type: str
                 required: true
           communities:
@@ -31,8 +69,7 @@ argument_specs:
                 required: true
               community_name:
                 type: str
-                required: false
-                default: "{{ name }}"
+                required: true
               username:
                 type: str
                 required: false
@@ -54,10 +91,49 @@ argument_specs:
               priv_password:
                 type: str
                 required: false
+          config:
+            type: dict
+            required: false
+            options:
+              path:
+                type: str
+                required: true
+              content:
+                type: raw
+                required: true
       logs:
         type: dict
         required: false
         options:
+          clients:
+            type: list
+            required: false
+            elements: dict
+            options:
+              url:
+                type: str
+                required: true
+              basic_write:
+                type: dict
+                required: false
+                options:
+                  username:
+                    type: str
+                    required: true
+                  password:
+                    type: str
+                    required: true
+              authorization:
+                type: dict
+                required: false
+                options:
+                  type:
+                    type: str
+                    required: false
+                    default: 'Bearer'
+                  credentials:
+                    type: str
+                    required: true
           positions_file:
             type: str
             required: false

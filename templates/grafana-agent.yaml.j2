@@ -7,6 +7,16 @@ integrations:
   {% if snmp is defined %}
   snmp:
     enabled: true
+    snmp_targets:
+      {% for target in snmp.targets %}
+      - name: {{ target.name }}
+        address: {{ target.address }}
+        module: {{ target.module }}
+        walk_param: {{ target.community }}
+      {% endfor %}
+    {% if snmp.config is defined %}
+    config_file: {{ snmp.config.path }}
+    {% endif %}
     walk_param:
       {% for community in snmp.communities %}
       {{ community.name }}:
@@ -21,35 +31,28 @@ integrations:
           priv_password: {{ community.priv_password }}
       {% endfor %}
   {% endif %}
-  prometheus_remote_write:
-    - basic_auth:
-        password: {{ prometheus_password }}
-        username: {{ prometheus_username }}
-      url: {{ prometheus_url }}
 {% if logs is defined %}
 logs:
   configs:
-    - clients:
-        - basic_auth:
-            password: {{ loki_password }}
-            username: {{ loki_username }}
-          url: {{ loki_url }}
-      name: integrations
+    - name: integrations
       positions:
         filename: {{ logs.positions_file }}
       scrape_configs:
         {{ logs.scrape_configs | to_nice_yaml(indent=2) | trim | indent(8) }}
       target_config:
         sync_period: 10s
+      {% if logs.clients is defined %}
+      clients:
+        {{ logs.clients | to_nice_yaml(indent=2) | trim | indent(8) }}
+      {% endif %}
 {% endif %}
 metrics:
   configs:
     {{ metrics.configs | to_nice_yaml(indent=2) | trim | indent(4) }}
   global:
     scrape_interval: {{ metrics.scrape_interval }}s
+    {% if remote_write is defined %}
     remote_write:
-      - basic_auth:
-          password: {{ prometheus_password }}
-          username: {{ prometheus_username }}
-        url: {{ prometheus_url }}
+      {{ remote_write | to_nice_yaml(indent=2) | trim | indent(6) }}
+    {% endif %}
   wal_directory: {{ metrics.wal_directory }}
