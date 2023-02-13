@@ -64,10 +64,16 @@ logs:
       {% endif %}
 {% endif %}
 metrics:
+  {% if metrics is defined and 'configs' in metrics %}
   configs:
     {{ metrics['configs'] | to_nice_yaml(indent=2) | trim | indent(4) }}
+  {% endif %}
   global:
-    scrape_interval: {{ metrics['scrape_interval'] }}s
+    {% if metrics is defined %}
+    scrape_interval: {{ metrics.get('scrape_interval', 60) }}s
+    {% else %}
+    scrape_interval: 60s
+    {% endif %}
     {% if remote_write is defined %}
     remote_write:
       {% for client in remote_write %}
@@ -83,4 +89,8 @@ metrics:
         {% endif %}
       {% endfor %}
     {% endif %}
-  wal_directory: {{ metrics['wal_directory'] }}
+  {% if metrics is defined %}
+  wal_directory: {{ metrics.get('wal_directory', '/tmp/grafana-agent-wal') }}
+  {% else %}
+  wal_directory: /tmp/grafana-agent-wal
+  {% endif %}
