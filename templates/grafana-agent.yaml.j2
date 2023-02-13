@@ -7,43 +7,60 @@ integrations:
   {% if snmp is defined %}
   snmp:
     enabled: true
+    {% if 'targets' in snmp %}
     snmp_targets:
-      {% for target in snmp['targets'].items() %}
+      {% for target in snmp['targets'] %}
       - name: {{ target['name'] }}
         address: {{ target['address'] }}
         module: {{ target['module'] }}
         walk_param: {{ target['community'] }}
       {% endfor %}
+    {% endif %}
     {% if 'config' in snmp %}
     config_file: {{ snmp['config']['path'] }}
     {% endif %}
+    {% if 'communities' in snmp %}
     walk_param:
-      {% for community in snmp['communities'].items() %}
+      {% for community in snmp['communities'] %}
       {{ community['name'] }}:
-        version: {{ community['version'] }}
+        version: {{ community.get('version', 2) }}
         auth:
-          community: {{ community['community_name'] }}
+          community: {{ community.get('community_name', community['name']) }}
           username: {{ community['username'] }}
-          security_level: {{ community['security_level'] }}
+          security_level: {{ community.get('security_level', 'noAuthNoPriv') }}
           password: {{ community['password'] }}
-          auth_protocol: {{ community['auth_protocol'] }}
-          priv_protocol: {{ community['priv_protocol'] }}
+          auth_protocol: {{ community.get('auth_protocol', 'SHA256') }}
+          priv_protocol: {{ community.get('priv_protocol', 'AES256') }}
           priv_password: {{ community['priv_password'] }}
       {% endfor %}
+    {% endif %}
   {% endif %}
 {% if logs is defined %}
 logs:
   configs:
     - name: integrations
       positions:
-        filename: {{ logs['positions_file'] }}
+        filename: {{ logs.get('positions_file', '/tmp/positions.yaml') }}
+      {% if 'scrape_configs' in logs %}
       scrape_configs:
         {{ logs['scrape_configs'] | to_nice_yaml(indent=2) | trim | indent(8) }}
+      {% endif %}
       target_config:
         sync_period: 10s
       {% if 'clients' in logs %}
       clients:
-        {{ logs['clients'] | to_nice_yaml(indent=2) | trim | indent(8) }}
+        {% for client in logs['clients'] %}
+        - url: {{ client['url'] }}
+          {% if 'basic_auth' in client %}
+          basic_auth:
+            username: {{ client['basic_auth']['username'] }}
+            password: {{ client['basic_auth'].get('password', '') }}
+          {% elif 'authorization' in client %}
+          authorization:
+            type: {{ client['authorization'].get('type', 'Bearer') }}
+            credentials: {{ client['authorization']['credentials'] }}
+          {% endif %}
+        {% endfor %}
       {% endif %}
 {% endif %}
 metrics:
@@ -53,6 +70,17 @@ metrics:
     scrape_interval: {{ metrics['scrape_interval'] }}s
     {% if remote_write is defined %}
     remote_write:
-      {{ remote_write | to_nice_yaml(indent=2) | trim | indent(6) }}
+      {% for client in remote_write %}
+      - url: {{ client['url'] }}
+        {% if 'basic_auth' in client %}
+        basic_auth:
+          username: {{ client['basic_auth']['username'] }}
+          password: {{ client['basic_auth'].get('password', '') }}
+        {% elif 'authorization' in client %}
+        authorization:
+          type: {{ client['authorization'].get('type', 'Bearer') }}
+          credentials: {{ client['authorization']['credentials'] }}
+        {% endif %}
+      {% endfor %}
     {% endif %}
   wal_directory: {{ metrics['wal_directory'] }}
