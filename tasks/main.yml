@@ -28,6 +28,29 @@
     home: '/var/lib/grafana-agent'
     create_home: true
     state: present
+- name: "Setup Grafana agent WAL directory"
+  ansible.builtin.file:
+    path: "{{ metrics['wal_directory'] | default('/tmp/grafana-agent-wal') }}"
+    owner: grafana-agent
+    group: grafana-agent
+    mode: 0755
+    state: directory
+- name: "Configure Grafana log positions file"
+  ansible.builtin.file:
+    path: "{{ logs['positions_file'] | default('/tmp/positions.yaml') }}"
+    owner: grafana-agent
+    group: grafana-agent
+    mode: 0644
+    state: file
+  when: logs is defined
+- name: "Configure Grafana SNMP agent"
+  ansible.builtin.copy:
+    content: "{{ snmp[ 'config' ][ 'content' ] }}"
+    dest: "{{ snmp['config']['path'] }}"
+    owner: root
+    group: grafana-agent
+    mode: 0640
+  when: snmp is defined and 'config' in snmp
 - name: "Configure Grafana agent"
   ansible.builtin.template:
     src: grafana-agent.yaml.j2
