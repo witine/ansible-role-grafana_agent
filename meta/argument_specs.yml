@@ -155,6 +155,6 @@ argument_specs:
             default: 60
           configs:
             type: raw
-            required: true
+            required: false
             default:
               - name: integrations
