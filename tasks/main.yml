@@ -41,7 +41,7 @@
     owner: grafana-agent
     group: grafana-agent
     mode: 0644
-    state: file
+    state: touch
   when: logs is defined
 - name: "Configure Grafana SNMP agent"
   ansible.builtin.copy:
