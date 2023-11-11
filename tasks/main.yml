@@ -58,6 +58,7 @@
     owner: root
     group: grafana-agent
     mode: 0640
+  notify: "Restart grafana-agent service"
 - name: "Configure Grafana agent service"
   ansible.builtin.service:
     name: grafana-agent

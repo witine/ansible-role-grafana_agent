@@ -1,0 +1,5 @@
+---
+- name: "Restart grafana-agent service"
+  ansible.builtin.service:
+    name: grafana-agent
+    state: restarted
